@@ -1,15 +1,13 @@
 {
-  "name": "electron-boilerplate",
-  "productName": "Electron Boilerplate",
-  "description": "Starter for your Electron application",
+  "name": "cb-electron-proxy",
+  "productName": "CB Electron Proxy",
+  "description": "CB Electron proxy",
   "version": "0.0.0",
   "private": true,
-  "author": "Mr. Gumby <mr.gumby@example.com>",
-  "copyright": "© 2017, Gumby inc.",
   "homepage": "http://example.com",
   "main": "app/background.js",
   "build": {
-    "appId": "com.example.electron-boilerplate",
+    "appId": "com.riley.cb-electron-proxy",
     "files": [
       "app/**/*",
       "node_modules/**/*",
@@ -31,7 +29,11 @@
     "release": "npm test && webpack --config=build/webpack.app.config.js --env=production && electron-builder"
   },
   "dependencies": {
-    "fs-jetpack": "^2.1.0"
+    "body-parser": "^1.18.3",
+    "cors": "^2.8.4",
+    "express": "^4.16.3",
+    "fs-jetpack": "^2.1.0",
+    "ws": "^6.0.0"
   },
   "devDependencies": {
     "@babel/core": "^7.0.0-beta.54",
