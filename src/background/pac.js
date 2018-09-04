@@ -1,22 +1,56 @@
-import net from "net";
+import net from 'net';
+import env from 'env';
 
 class SoftPAC {
   constructor() {
-    const client = new net.Socket();
+    this.client = new net.Socket();
+    this.client.connect(
+      env.pacPort,
+      env.pacHost,
+      () => {
+        console.log(`Connected to PAC ${env.pacHost}:${env.pacPort}`);
 
-    client.connect(22004, "192.168.1.12", () => {
-      console.log("Connected");
-      client.write("get-version\r\n");
-    });
+        this.run('get-version');
+      }
+    );
 
-    client.on("data", data => {
-      console.log("Received: " + data);
-      client.destroy(); // kill client after server's response
+    this.client.on('close', () => {
+      console.log(`Connection closed with PAC`);
     });
+  }
 
-    client.on("close", () => {
-      console.log("Connection closed");
+  run(command) {
+    const { client } = this;
+
+    return new Promise((resolve, reject) => {
+      try {
+        client.write(`${command}\r\n`);
+
+        const handler = data => {
+          const str = data.toString();
+          console.log('Received from PAC: ' + str);
+
+          if (str.trim() === 'hello') {
+            console.log('Received hello :/. waiting for next output');
+            client.once('data', handler);
+            return;
+          }
+
+          resolve(str);
+        };
+
+        client.once('data', handler);
+        client.once('error', err => {
+          reject(err);
+        });
+      } catch (e) {
+        reject(e);
+      }
     });
+  }
+
+  destroy() {
+    this.client.destroy();
   }
 }
 
