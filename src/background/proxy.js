@@ -20,6 +20,7 @@ class Proxy extends EventEmitter {
 
     this.app = app;
     this.pac = new SoftPAC();
+    this.queue = [];
     this.setupRoutes();
     this.startServer();
   }
@@ -41,26 +42,13 @@ class Proxy extends EventEmitter {
     });
 
     if (this.running) {
-      req.retry = (req.retry || 0) + 1;
-      let message = `PAC is busy. Retry count=${
-        req.retry
-      }. Trying again in 100ms...`;
-
-      if (req.retry >= 3) {
-        message = `PAC is busy. Maximum retry count ${req.retry} exceeded.`;
-      }
+      this.queue.push({ req, res });
 
       this.emit('proxy-log', {
         status: 'error',
-        message,
-        title: `Error (+${new Date().valueOf() - timestamp}ms): `
+        message: `Queuing. Current Queue Size: ${this.queue.length}`,
+        title: `Pac Busy: `
       });
-
-      if (req.retry < 3) {
-        setTimeout(() => {
-          this.runPAC(req, res);
-        }, 100);
-      }
       return;
     }
 
@@ -97,6 +85,12 @@ class Proxy extends EventEmitter {
           message
         });
         this.running = false;
+      })
+      .then(() => {
+        if (this.queue.length) {
+          const item = this.queue.shift();
+          this.runPAC(item.req, item.res);
+        }
       });
   }
 
